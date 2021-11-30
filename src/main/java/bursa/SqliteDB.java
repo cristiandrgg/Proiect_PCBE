@@ -11,7 +11,7 @@ public class SqliteDB {
     Connection connection = null;
     Statement statement = null;
 
-    SqliteDB() {
+    public SqliteDB() {
         try {
             Class.forName("org.sqlite.JDBC");
             connection = DriverManager.getConnection("jdbc:sqlite:bursa.db");
@@ -19,6 +19,22 @@ public class SqliteDB {
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
+    }
+
+    public Connection getConnection() {
+        return connection;
+    }
+
+    public void setConnection(Connection connection) {
+        this.connection = connection;
+    }
+
+    public Statement getStatement() {
+        return statement;
+    }
+
+    public void setStatement(Statement statement) {
+        this.statement = statement;
     }
 
     public List<Buyer> getBuyers() throws SQLException {

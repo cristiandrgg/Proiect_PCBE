@@ -21,15 +21,17 @@ public class Server {
         SqliteDB sqliteDB = new SqliteDB();
 
         System.out.println("This is a server");
-        SellerThread sellerThread = new SellerThread();
-        sellerThread.start();
-        BuyerThread buyerThread = new BuyerThread();
+
+        //SellerThread sellerThread = new SellerThread(1);
+        //sellerThread.start();
+        BuyerThread buyerThread = new BuyerThread(2);
         buyerThread.start();
 
-        List<Buyer> result = sqliteDB.getBuyers();
 
-        System.out.println(result.get(0).getName());
-        System.out.println(result.get(1).getName());
-        System.out.println(result.get(2).getName());
+        //List<Buyer> result = sqliteDB.getBuyers();
+
+       // System.out.println(result.get(0).getName());
+      //  System.out.println(result.get(1).getName());
+      //  System.out.println(result.get(2).getName());
     }
 }
