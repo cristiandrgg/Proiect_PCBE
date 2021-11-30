@@ -1,13 +1,11 @@
 package bursa;
 
+import models.Bid;
 import models.Buyer;
-import threads.BuyerThread;
-import threads.SellerThread;
+import models.Seller;
+import models.Stock;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.List;
 
 /**
@@ -20,16 +18,53 @@ public class Server {
     public static void main(String[] args) throws SQLException {
         SqliteDB sqliteDB = new SqliteDB();
 
-        System.out.println("This is a server");
-        SellerThread sellerThread = new SellerThread();
+        System.out.println("Welcome to Timisoara Stock Exchange");
+
+        List<Seller> sellers = sqliteDB.getSellers();
+        List<Buyer> buyers = sqliteDB.getBuyers();
+        List<Stock> stocks = sqliteDB.getStocks();
+        List<Bid> bids = sqliteDB.getBids();
+
+        print(sellers, buyers, bids, stocks);
+
+        /*
+        SellerThread sellerThread = new SellerThread(1);
         sellerThread.start();
-        BuyerThread buyerThread = new BuyerThread();
+        BuyerThread buyerThread = new BuyerThread(2);
         buyerThread.start();
+        */
+    }
 
-        List<Buyer> result = sqliteDB.getBuyers();
+    private static void print(List<Seller> sellers, List<Buyer> buyers, List<Bid> bids, List<Stock> stocks) {
+        System.out.println("Buyers:");
+        for (Buyer buyer : buyers) {
+            System.out.println(buyer.getId() + " " + buyer.getName());
 
-        System.out.println(result.get(0).getName());
-        System.out.println(result.get(1).getName());
-        System.out.println(result.get(2).getName());
+            for (Bid bid : buyer.getBidList()) {
+                System.out.println(bid.getId() + " " + bid.getStockId() + " " + bid.getPrice() + " " + bid.getNumberOfStocks());
+            }
+            System.out.println("\n");
+        }
+
+        System.out.println("\nSellers:");
+        for (Seller seller : sellers) {
+            System.out.println(seller.getId() + " " + seller.getName());
+
+            for (Stock stock : seller.getStockList()) {
+                System.out.println(stock.getId() + " " + stock.getName() + " " + stock.getNumberOfStocks() + " " + stock.getSellerId());
+            }
+
+            System.out.println("\n");
+        }
+
+        System.out.println("\nBids:");
+        for (Bid bid : bids) {
+            System.out.println(bid.getId() + " " + bid.getBuyerId() + " " + bid.getStockId() + " " + bid.getPrice() + " " + bid.getNumberOfStocks());
+        }
+
+        System.out.println("\nStocks:");
+        for (Stock stock : stocks) {
+            System.out.println(stock.getId() + " " + stock.getName() + " " + stock.getNumberOfStocks() + " " + stock.getPrice() + " " + stock.getSellerId());
+        }
     }
 }
