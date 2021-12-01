@@ -4,6 +4,8 @@ import models.Bid;
 import models.Buyer;
 import models.Seller;
 import models.Stock;
+import processes.BuyerProcess;
+import processes.SellerProcess;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -27,12 +29,14 @@ public class Server {
 
         print(sellers, buyers, bids, stocks);
 
-        /*
-        SellerThread sellerThread = new SellerThread(1);
-        sellerThread.start();
-        BuyerThread buyerThread = new BuyerThread(2);
-        buyerThread.start();
-        */
+        for(Seller seller : sellers){
+            SellerProcess sellerProcess = new SellerProcess(seller);
+            sellerProcess.start();
+        }
+        for(Buyer buyer : buyers){
+            BuyerProcess buyerProcess = new BuyerProcess(buyer);
+            buyerProcess.start();
+        }
     }
 
     private static void print(List<Seller> sellers, List<Buyer> buyers, List<Bid> bids, List<Stock> stocks) {

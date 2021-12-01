@@ -14,6 +14,7 @@ public class Buyer {
         this.id = id;
         this.name = name;
         this.bidList = new ArrayList<>();
+        this.stockList = new ArrayList<>();
     }
 
     public Integer getId() {

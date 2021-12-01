@@ -5,10 +5,10 @@ public class Bid {
     private Integer id;
     private Integer buyerId;
     private Integer stockId;
-    private double price;
+    private float price;
     private Integer numberOfStocks;
 
-    public Bid(Integer id, Integer buyerId, Integer stockId, double price, Integer numberOfStocks) {
+    public Bid(Integer id, Integer buyerId, Integer stockId, float price, Integer numberOfStocks) {
         this.id = id;
         this.buyerId = buyerId;
         this.stockId = stockId;
@@ -40,11 +40,11 @@ public class Bid {
         this.stockId = stockId;
     }
 
-    public double getPrice() {
+    public float getPrice() {
         return price;
     }
 
-    public void setPrice(double price) {
+    public void setPrice(float price) {
         this.price = price;
     }
 

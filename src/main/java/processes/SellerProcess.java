@@ -1,12 +1,47 @@
 package processes;
 
-import java.net.Socket;
+import bursa.SqliteDB;
+import models.Bid;
+import models.Seller;
+import models.Stock;
+
+import java.sql.SQLException;
+import java.util.List;
 
 public class SellerProcess extends Thread {
 
-    private Socket socket;
+    private Seller seller;
+    SqliteDB sqliteDB = new SqliteDB();
+    boolean semaphore = false;
 
-    public SellerProcess(Socket socket) {
-        this.socket = socket;
+    public SellerProcess(Seller seller) {
+        this.seller = seller;
+    }
+
+    public void run() {
+        while (true) {
+            try {
+                List<Bid> bids = sqliteDB.getBids();
+                for (Stock stock : seller.getStockList()) {
+                    System.out.printf("Seller with id %s sells stock with id %s%n", seller.getId(), stock.getId());
+                    for (Bid bid : bids) {
+                        if (bid.getStockId().equals(stock.getId())) {
+                            if (bid.getPrice() == stock.getPrice()) {
+                                // TODO
+                            } else {
+                                // TODO creste pret
+                            }
+                        }
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            try {
+                sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
