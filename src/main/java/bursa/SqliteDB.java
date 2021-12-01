@@ -24,21 +24,6 @@ public class SqliteDB {
         }
     }
 
-    public Connection getConnection() {
-        return connection;
-    }
-
-    public void setConnection(Connection connection) {
-        this.connection = connection;
-    }
-
-    public Statement getStatement() {
-        return statement;
-    }
-
-    public void setStatement(Statement statement) {
-        this.statement = statement;
-    }
 
     public List<Buyer> getBuyers() {
         List<Buyer> list = new ArrayList<>();
@@ -53,20 +38,7 @@ public class SqliteDB {
                 Buyer buyer = new Buyer(id, name);
 
                 // bids
-                Statement bidStatement = connection.createStatement();
-                ResultSet bidResultSet = bidStatement.executeQuery(String.format("SELECT * FROM BIDS WHERE id_buyer=%s", id));
-
-                List<Bid> bidList = new ArrayList<>();
-
-                while (bidResultSet.next()) {
-                    Integer bidId = bidResultSet.getInt("id");
-                    Integer stockId = bidResultSet.getInt("id_actiune");
-                    float price = bidResultSet.getFloat("pret");
-                    Integer stockNumber = bidResultSet.getInt("nr_actiuni");
-
-                    Bid bid = new Bid(bidId, id, stockId, price, stockNumber);
-                    bidList.add(bid);
-                }
+                List<Bid> bidList = getBids();
                 buyer.setBidList(bidList);
 
                 list.add(buyer);
@@ -89,22 +61,11 @@ public class SqliteDB {
                 Integer id = resultSet.getInt("id");
                 String name = resultSet.getString("nume");
                 Seller seller = new Seller(id, name);
-                List<Stock> stockList = new ArrayList<>();
 
                 // stocks
-                Statement stockStatement = connection.createStatement();
-                ResultSet stockResultSet = stockStatement.executeQuery(String.format("SELECT * FROM STOCKS WHERE id_seller=%s", id));
-
-                while (stockResultSet.next()) {
-                    Integer stockId = stockResultSet.getInt("id");
-                    String stockName = stockResultSet.getString("nume");
-                    Integer stockNumber = stockResultSet.getInt("nr_actiuni");
-                    float price = stockResultSet.getFloat("pret");
-
-                    Stock stock = new Stock(stockId, stockName, stockNumber, price, id);
-                    stockList.add(stock);
-                }
+                List<Stock> stockList = getStocks();
                 seller.setStockList(stockList);
+
                 list.add(seller);
             }
         } catch (SQLException e) {
@@ -152,5 +113,44 @@ public class SqliteDB {
             stockList.add(stock);
         }
         return stockList;
+    }
+
+    public void updateBid(Bid bid, boolean modify) throws SQLException {
+        int random = (int) (Math.random() * 4);
+        float changedPrice;
+        if (!modify) {
+            changedPrice = bid.getPrice() - random;
+        } else {
+            changedPrice = bid.getPrice() + random;
+        }
+
+        Statement stockStatement = connection.createStatement();
+        int rowsCount = stockStatement.executeUpdate(String.format("UPDATE BIDS SET pret=%s WHERE id=%s", changedPrice, bid.getId()));
+
+        if (rowsCount == 1) {
+            System.out.printf("Bid price has changed to %s", changedPrice);
+        } else {
+            System.out.println("Bid price hasn't changed");
+        }
+    }
+
+    public void updateStock(Stock stock, boolean modify) throws SQLException {
+        int random = (int) (Math.random() * 4);
+        float changedPrice;
+        if (!modify) {
+            changedPrice = stock.getPrice() + random;
+        } else {
+            changedPrice = stock.getPrice() - random;
+        }
+
+
+        Statement stockStatement = connection.createStatement();
+        int rowsCount = stockStatement.executeUpdate(String.format("UPDATE STOCK SET pret=%s WHERE id=%s", changedPrice, stock.getId()));
+
+        if (rowsCount == 1) {
+            System.out.printf("Stock price has changed to %s", changedPrice);
+        } else {
+            System.out.println("Stock price hasn't changed");
+        }
     }
 }

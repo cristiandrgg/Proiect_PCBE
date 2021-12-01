@@ -13,6 +13,7 @@ public class SellerProcess extends Thread {
     private Seller seller;
     SqliteDB sqliteDB = new SqliteDB();
     boolean semaphore = false;
+    boolean modify = false;
 
     public SellerProcess(Seller seller) {
         this.seller = seller;
@@ -29,7 +30,11 @@ public class SellerProcess extends Thread {
                             if (bid.getPrice() == stock.getPrice()) {
                                 // TODO
                             } else {
-                                // TODO creste pret
+                                modify = false;
+                                if (bid.getPrice() > stock.getPrice()) {
+                                    modify = true;
+                                }
+                                sqliteDB.updateStock(stock, modify);
                             }
                         }
                     }
