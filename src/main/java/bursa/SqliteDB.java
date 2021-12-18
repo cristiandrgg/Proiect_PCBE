@@ -21,7 +21,7 @@ import java.util.concurrent.TimeoutException;
 public class SqliteDB {
 
     java.sql.Connection connection = null;
-    private static int count = 0;
+    private boolean semaphore[] = new boolean[10];
 
     public SqliteDB() {
         try {
@@ -182,94 +182,97 @@ public class SqliteDB {
     }
 
     public void exchange(Stock stock, Bid bid) throws SQLException, InterruptedException {
-        Semaphore mutex = new Semaphore(1);
-        try {
-            mutex.acquire();
+        if (!semaphore[stock.getId()]) {
+            Semaphore mutex = new Semaphore(1);
             try {
-                Class.forName("org.sqlite.JDBC");
-                connection = DriverManager.getConnection("jdbc:sqlite:bursa.db");
+                mutex.acquire();
+                try {
+                    Class.forName("org.sqlite.JDBC");
+                    connection = DriverManager.getConnection("jdbc:sqlite:bursa.db");
 
-            } catch (Exception e) {
-                System.out.println(e.getMessage());
-            }
-
-            Statement counterStatement = connection.createStatement();
-            ResultSet resultSet = counterStatement.executeQuery("SELECT MAX(id_tranz) FROM HISTORY");
-
-            Integer numberOfStocks = null;
-            Integer counter = null;
-
-            while (resultSet.next()) {
-                counter = resultSet.getInt("MAX(id_tranz)");
-            }
-
-            if (counter == null) {
-                counter = 1;
-            } else {
-                counter++;
-            }
-
-            if (stock.getPrice() != bid.getPrice()) {
-                bid.setPrice(stock.getPrice());
-            }
-
-            if (bid.getNumberOfStocks() > stock.getNumberOfStocks()) {
-                numberOfStocks = stock.getNumberOfStocks();
-            } else {
-                numberOfStocks = stock.getNumberOfStocks() - bid.getNumberOfStocks();
-            }
-
-            Statement statement = connection.createStatement();
-            Integer bidId = bid.getId();
-            Integer stockId = stock.getId();
-
-            int rowsCountInsert = statement.executeUpdate(String.format("INSERT INTO HISTORY VALUES (%s, %s, %s)", counter, stockId, bidId));
-
-            String message = null;
-
-            if (rowsCountInsert == 1) {
-                message = String.format("Transaction with id %s between seller with id %s and buyer %s was completed", counter, bid.getBuyerId(), stock.getSellerId());
-            } else {
-                message = "History failed";
-            }
-
-            sendHistoryNotification(message);
-
-            int rowsCountUpdate = statement.executeUpdate(String.format("UPDATE SELLS SET nr_actiuni=%s WHERE id_stock=%s", numberOfStocks, stock.getId()));
-            if (rowsCountUpdate == 1) {
-                message = String.format("Stock offer with id %s was modified", stock.getId());
-            } else {
-                message = "Update failed";
-            }
-
-            sendHistoryNotification(message);
-
-            int rowsCountDeleteBid = statement.executeUpdate(String.format("DELETE FROM BIDS WHERE id_actiune=%s", bid.getStockId()));
-
-            if (rowsCountDeleteBid == 1) {
-                message = String.format("Bid with id %s was completed", bid.getId());
-            } else {
-                message = "Bid deletion failed";
-            }
-
-            sendHistoryNotification(message);
-
-            if (numberOfStocks == 0) {
-                int rowsCountDeleteStock = statement.executeUpdate(String.format("DELETE FROM SELLS WHERE id_stock=%s", stock.getId()));
-
-                if (rowsCountDeleteStock == 1) {
-                    message = String.format("Stock sell with id %s was completed");
-                } else {
-                    message = "Stock sell offer wasn't completed";
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
                 }
-            }
 
-            statement.close();
-            sendHistoryNotification(message);
-        } catch (InterruptedException | IOException | TimeoutException e) {
-            System.out.println("Blocked access");
-        } finally {
-            mutex.release();
+                Statement counterStatement = connection.createStatement();
+                ResultSet resultSet = counterStatement.executeQuery("SELECT MAX(id_tranz) FROM HISTORY");
+
+                Integer numberOfStocks = null;
+                Integer counter = null;
+
+                while (resultSet.next()) {
+                    counter = resultSet.getInt("MAX(id_tranz)");
+                }
+
+                if (counter == null) {
+                    counter = 1;
+                } else {
+                    counter++;
+                }
+
+                if (stock.getPrice() != bid.getPrice()) {
+                    bid.setPrice(stock.getPrice());
+                }
+
+                if (bid.getNumberOfStocks() > stock.getNumberOfStocks()) {
+                    numberOfStocks = stock.getNumberOfStocks();
+                } else {
+                    numberOfStocks = stock.getNumberOfStocks() - bid.getNumberOfStocks();
+                }
+
+                Statement statement = connection.createStatement();
+                Integer bidId = bid.getId();
+                Integer stockId = stock.getId();
+
+                int rowsCountInsert = statement.executeUpdate(String.format("INSERT INTO HISTORY VALUES (%s, %s, %s)", counter, stockId, bidId));
+
+                String message = null;
+
+                if (rowsCountInsert == 1) {
+                    message = String.format("Transaction with id %s between seller with id %s and buyer %s was completed", counter, bid.getBuyerId(), stock.getSellerId());
+                } else {
+                    message = "History failed";
+                }
+
+                sendHistoryNotification(message);
+
+                int rowsCountUpdate = statement.executeUpdate(String.format("UPDATE SELLS SET nr_actiuni=%s WHERE id_stock=%s", numberOfStocks, stock.getId()));
+                if (rowsCountUpdate == 1) {
+                    message = String.format("Stock offer with id %s was modified", stock.getId());
+                } else {
+                    message = "Update failed";
+                }
+
+                sendHistoryNotification(message);
+
+                int rowsCountDeleteBid = statement.executeUpdate(String.format("DELETE FROM BIDS WHERE id_actiune=%s", bid.getStockId()));
+
+                if (rowsCountDeleteBid == 1) {
+                    message = String.format("Bid with id %s was completed", bid.getId());
+                } else {
+                    message = "Bid deletion failed";
+                }
+
+                sendHistoryNotification(message);
+
+                if (numberOfStocks == 0) {
+                    int rowsCountDeleteStock = statement.executeUpdate(String.format("DELETE FROM SELLS WHERE id_stock=%s", stock.getId()));
+
+                    if (rowsCountDeleteStock == 1) {
+                        message = String.format("Stock sell with id %s was completed");
+                    } else {
+                        message = "Stock sell offer wasn't completed";
+                    }
+                    sendHistoryNotification(message);
+                }
+
+                statement.close();
+            } catch (InterruptedException | IOException | TimeoutException e) {
+                System.out.println("Blocked access");
+            } finally {
+                semaphore[stock.getId()] = true;
+                mutex.release();
+            }
         }
     }
 
