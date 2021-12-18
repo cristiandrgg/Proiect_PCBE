@@ -39,8 +39,13 @@ public class SqliteDB {
 
                 // bids
                 List<Bid> bidList = getBids();
-                buyer.setBidList(bidList);
-
+                List<Bid> buyerBidsList = new ArrayList<>();
+                for (Bid bid : bidList) {
+                    if (bid.getBuyerId().equals(buyer.getId())) {
+                        buyerBidsList.add(bid);
+                    }
+                }
+                buyer.setBidList(buyerBidsList);
                 list.add(buyer);
             }
         } catch (SQLException e) {
