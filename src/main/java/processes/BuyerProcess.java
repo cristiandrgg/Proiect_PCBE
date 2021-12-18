@@ -24,18 +24,17 @@ public class BuyerProcess extends Thread {
             try {
                 List<Stock> stocks = sqliteDB.getStocks();
                 for (Bid bid : buyer.getBidList()) {
-                    System.out.printf("Buyer with id %s placed bid with id %s%n", buyer.getId(), bid.getId());
                     for (Stock stock : stocks) {
                         if (bid.getStockId().equals(stock.getId())) {
-                            if (stock.getPrice() - bid.getPrice() <= 2) {
-                                //sqliteDB.exchange(stock, bid);
+                            if (stock.getPrice() - bid.getPrice() <= 2 && bid.getPrice() > stock.getPrice()) {
+                                sqliteDB.exchange(stock, bid);
                             } else {
                                 sqliteDB.updateBid(bid);
                             }
                         }
                     }
                 }
-            } catch (SQLException e) {
+            } catch (SQLException | InterruptedException e) {
                 e.printStackTrace();
             }
             try {
@@ -45,5 +44,4 @@ public class BuyerProcess extends Thread {
             }
         }
     }
-
 }

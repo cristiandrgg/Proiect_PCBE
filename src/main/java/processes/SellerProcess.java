@@ -24,12 +24,10 @@ public class SellerProcess extends Thread {
             try {
                 List<Bid> bids = sqliteDB.getBids();
                 for (Stock stock : seller.getStockList()) {
-                    System.out.printf("Seller with id %s sells stock with id %s%n", seller.getId(), stock.getId());
                     for (Bid bid : bids) {
                         if (bid.getStockId().equals(stock.getId())) {
-                            if (stock.getPrice() - bid.getPrice() <= 2) {
+                            if (stock.getPrice() - bid.getPrice() <= 2 && bid.getPrice() > stock.getPrice()) {
                                 sqliteDB.exchange(stock, bid);
-                                return;
                             } else {
                                 sqliteDB.updateStock(stock);
                             }
