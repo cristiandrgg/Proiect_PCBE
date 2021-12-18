@@ -20,7 +20,9 @@ public class BuyerProcess extends Thread {
     }
 
     public void run(){
-        while(true){
+        long t= System.currentTimeMillis();
+        long end = t+5000;
+        while(System.currentTimeMillis() < end){
             try {
                 List<Stock> stocks = sqliteDB.getStocks();
                 for (Bid bid : buyer.getBidList()) {

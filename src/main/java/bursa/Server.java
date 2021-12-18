@@ -8,7 +8,11 @@ import processes.BuyerProcess;
 import processes.SellerProcess;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
+
+import static java.lang.Thread.sleep;
 
 /**
  * Created by: Doru
@@ -17,25 +21,53 @@ import java.util.List;
 
 public class Server {
 
-    public static void main(String[] args) throws SQLException {
-        SqliteDB sqliteDB = new SqliteDB();
+    public static void main(String[] args) throws SQLException, InterruptedException {
 
         System.out.println("Welcome to Timisoara Stock Exchange");
 
-        List<Seller> sellers = sqliteDB.getSellers();
-        List<Buyer> buyers = sqliteDB.getBuyers();
-        List<Stock> stocks = sqliteDB.getStocks();
-        List<Bid> bids = sqliteDB.getBids();
+        List<Seller> sellers = new ArrayList<>();
+        List<Buyer> buyers = new ArrayList<>();
+        List<Stock> stocks;
+        List<Bid> bids;
 
-        print(sellers, buyers, bids, stocks);
+        while(true) {
+            System.out.println("Load DataBase - 1\n" +
+                    "Start Simulation - 2\n" +
+                    "Exit Application - Anything Else\n" +
+                    "\n" +
+                    "Pick an option: ");
 
-        for(Seller seller : sellers){
-            SellerProcess sellerProcess = new SellerProcess(seller);
-            sellerProcess.start();
-        }
-        for(Buyer buyer : buyers){
-            BuyerProcess buyerProcess = new BuyerProcess(buyer);
-            buyerProcess.start();
+            Scanner scanner = new Scanner(System.in);
+            String option = scanner.nextLine();
+
+            if (option.equals("1")) {
+                System.out.println("DataBase is loading!");
+                SqliteDB sqliteDB = new SqliteDB();
+                sellers = sqliteDB.getSellers();
+                buyers = sqliteDB.getBuyers();
+                stocks = sqliteDB.getStocks();
+                bids = sqliteDB.getBids();
+                System.out.println("DataBase loaded!");
+                print(sellers, buyers, bids, stocks);
+            }
+            else if (option.equals("2")) {
+                System.out.println("Starting simulation in 2 seconds");
+                sleep(2000);
+                for(Seller seller : sellers){
+                    SellerProcess sellerProcess = new SellerProcess(seller);
+                    sellerProcess.start();
+                }
+                for(Buyer buyer : buyers){
+                    BuyerProcess buyerProcess = new BuyerProcess(buyer);
+                    buyerProcess.start();
+                }
+                sleep(7000);
+                System.out.println("Simulation ended");
+            }
+            else{
+                System.out.println("Thank you for using Timisoara Stock Exchange and have a nice day!");
+                break;
+            }
         }
     }
 
