@@ -25,13 +25,13 @@ public class Server {
 
         System.out.println("Welcome to Timisoara Stock Exchange");
 
-        List<Seller> sellers = new ArrayList<>();
-        List<Buyer> buyers = new ArrayList<>();
+        List<Seller> sellers = null;
+        List<Buyer> buyers = null;
         List<Stock> stocks;
         List<Bid> bids;
 
         while(true) {
-            System.out.println("Load DataBase - 1\n" +
+            System.out.println("\nLoad DataBase - 1\n" +
                     "Start Simulation - 2\n" +
                     "Exit Application - Anything Else\n" +
                     "\n" +
@@ -51,17 +51,27 @@ public class Server {
                 print(sellers, buyers, bids, stocks);
             }
             else if (option.equals("2")) {
-                System.out.println("Starting simulation in 2 seconds");
-                sleep(2000);
+                ArrayList<Thread> childThreads = new ArrayList<>();
+                System.out.println("Starting simulation");
+                if(sellers == null || buyers == null){
+                    System.out.println("WARNING: Simulation failed -> sellers or buyers are not loaded. Please load DataBase!");
+                    continue;
+                }
                 for(Seller seller : sellers){
                     SellerProcess sellerProcess = new SellerProcess(seller);
-                    sellerProcess.start();
+                    Thread t = new Thread(sellerProcess);
+                    childThreads.add(t);
+                    t.start();
                 }
-                for(Buyer buyer : buyers){
+                for(Buyer buyer : buyers) {
                     BuyerProcess buyerProcess = new BuyerProcess(buyer);
-                    buyerProcess.start();
+                    Thread t = new Thread(buyerProcess);
+                    childThreads.add(t);
+                    t.start();
                 }
-                sleep(7000);
+                for(Thread thread : childThreads){
+                    thread.join();
+                }
                 System.out.println("Simulation ended");
             }
             else{
