@@ -64,8 +64,13 @@ public class SqliteDB {
 
                 // stocks
                 List<Stock> stockList = getStocks();
-                seller.setStockList(stockList);
-
+                List<Stock> sellerStocksList = new ArrayList<>();
+                for (Stock stock : stockList) {
+                    if (stock.getSellerId().equals(seller.getId())) {
+                        sellerStocksList.add(stock);
+                    }
+                }
+                seller.setStockList(sellerStocksList);
                 list.add(seller);
             }
         } catch (SQLException e) {
@@ -98,7 +103,7 @@ public class SqliteDB {
     public List<Stock> getStocks() throws SQLException {
         // stocks
         Statement stockStatement = connection.createStatement();
-        ResultSet stockResultSet = stockStatement.executeQuery("SELECT * FROM STOCKS");
+        ResultSet stockResultSet = stockStatement.executeQuery("SELECT STOCKS.id, STOCKS.nume, SELLS.nr_actiuni, SELLS.pret, SELLS.id_seller FROM STOCKS, SELLS WHERE STOCKS.id = SELLS.id;");
 
         List<Stock> stockList = new ArrayList<>();
 
@@ -145,7 +150,7 @@ public class SqliteDB {
 
 
         Statement stockStatement = connection.createStatement();
-        int rowsCount = stockStatement.executeUpdate(String.format("UPDATE STOCK SET pret=%s WHERE id=%s", changedPrice, stock.getId()));
+        int rowsCount = stockStatement.executeUpdate(String.format("UPDATE SELLS SET pret=%s WHERE id_stock=%s", changedPrice, stock.getId()));
 
         if (rowsCount == 1) {
             System.out.printf("Stock price has changed to %s", changedPrice);
