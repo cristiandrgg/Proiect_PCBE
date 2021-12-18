@@ -1,15 +1,18 @@
 package bursa;
 
 import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
 import models.Bid;
 import models.Buyer;
 import models.Seller;
 import models.Stock;
 
 import java.io.IOException;
-import java.sql.*;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Semaphore;
@@ -262,36 +265,62 @@ public class SqliteDB {
 
             int rowsCountInsert = statement.executeUpdate(String.format("INSERT INTO HISTORY VALUES (%s, %s, %s)", counter, stockId, bidId));
 
+            String message = null;
+
             if (rowsCountInsert == 1) {
-                System.out.println("Insert in history");
+                message = String.format("Transaction with id %s between seller with id %s and buyer %s was completed", counter, bid.getBuyerId(), stock.getSellerId());
             } else {
-                System.out.println("History failed");
+                message = "History failed";
             }
 
-            sendHistoryNotification();
+            sendHistoryNotification(message);
 
             int rowsCountUpdate = statement.executeUpdate(String.format("UPDATE SELLS SET nr_actiuni=%s WHERE id_stock=%s", numberOfStocks, stock.getId()));
             if (rowsCountUpdate == 1) {
-                System.out.println("Updated successfully");
+                message = String.format("Stock offer with id %s was modified", stock.getId());
             } else {
-                System.out.println("Update failed");
+                message = "Update failed";
             }
+
+            sendHistoryNotification(message);
+
+            int rowsCountDeleteBid = statement.executeUpdate(String.format("DELETE FROM BIDS WHERE id_actiune=%s", bid.getStockId()));
+
+            if (rowsCountDeleteBid == 1) {
+                message = String.format("Bid with id %s was completed", bid.getId());
+            } else {
+                message = "Bid deletion failed";
+            }
+
+            sendHistoryNotification(message);
+
+            if (numberOfStocks == 0) {
+                int rowsCountDeleteStock = statement.executeUpdate(String.format("DELETE FROM SELLS WHERE id_stock=%s", stock.getId()));
+
+                if (rowsCountDeleteStock == 1) {
+                    message = String.format("Stock sell with id %s was completed");
+                } else {
+                    message = "Stock sell offer wasn't completed";
+                }
+            }
+
+            sendHistoryNotification(message);
+
             connection.close();
-        }catch (InterruptedException | IOException | TimeoutException e){
+        } catch (InterruptedException | IOException | TimeoutException e) {
             System.out.println("Blocked access");
-        }finally{
+        } finally {
             mutex.release();
         }
     }
 
-    private void sendHistoryNotification() throws IOException, TimeoutException {
+    private void sendHistoryNotification(String message) throws IOException, TimeoutException {
         ConnectionFactory factory = new ConnectionFactory();
 
-        try(Connection rabbitmqConnection = factory.newConnection()){
+        try (Connection rabbitmqConnection = factory.newConnection()) {
             Channel channel = rabbitmqConnection.createChannel();
             channel.queueDeclare("hello", false, false, false, null);
 
-            String message = "this is a message";
             channel.basicPublish("", "hello", false, null, message.getBytes());
         }
     }

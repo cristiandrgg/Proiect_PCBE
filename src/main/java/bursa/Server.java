@@ -13,10 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-/**
- * Created by: Doru
- * Date: 09/11/2021
- */
 
 public class Server {
 
@@ -28,6 +24,7 @@ public class Server {
         List<Buyer> buyers = null;
         List<Stock> stocks;
         List<Bid> bids;
+        SqliteDB sqliteDB = new SqliteDB();
 
         while (true) {
             System.out.println("\nLoad DataBase - 1\n" +
@@ -41,7 +38,7 @@ public class Server {
 
             if (option.equals("1")) {
                 System.out.println("DataBase is loading!");
-                SqliteDB sqliteDB = new SqliteDB();
+
                 sellers = sqliteDB.getSellers();
                 buyers = sqliteDB.getBuyers();
                 stocks = sqliteDB.getStocks();
@@ -56,13 +53,13 @@ public class Server {
                     continue;
                 }
                 for (Seller seller : sellers) {
-                    SellerProcess sellerProcess = new SellerProcess(seller);
+                    SellerProcess sellerProcess = new SellerProcess(seller, sqliteDB);
                     Thread t = new Thread(sellerProcess);
                     childThreads.add(t);
                     t.start();
                 }
                 for (Buyer buyer : buyers) {
-                    BuyerProcess buyerProcess = new BuyerProcess(buyer);
+                    BuyerProcess buyerProcess = new BuyerProcess(buyer, sqliteDB);
                     Thread t = new Thread(buyerProcess);
                     childThreads.add(t);
                     t.start();

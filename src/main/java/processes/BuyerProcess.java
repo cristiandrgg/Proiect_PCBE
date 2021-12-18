@@ -11,10 +11,11 @@ import java.util.List;
 public class BuyerProcess extends Thread {
 
     private Buyer buyer;
-    SqliteDB sqliteDB = new SqliteDB();
+    private SqliteDB sqliteDB;
 
-    public BuyerProcess(Buyer buyer) {
+    public BuyerProcess(Buyer buyer, SqliteDB sqliteDB) {
         this.buyer = buyer;
+        this.sqliteDB = sqliteDB;
     }
 
     public void run() {
