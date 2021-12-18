@@ -21,7 +21,7 @@ import java.util.concurrent.TimeoutException;
 public class SqliteDB {
 
     java.sql.Connection connection = null;
-    private boolean semaphore[] = new boolean[10];
+    private static volatile boolean semaphore[] = new boolean[10];
 
     public SqliteDB() {
         try {
@@ -184,6 +184,7 @@ public class SqliteDB {
     public void exchange(Stock stock, Bid bid) throws SQLException, InterruptedException {
         if (!semaphore[stock.getId()]) {
             Semaphore mutex = new Semaphore(1);
+            semaphore[stock.getId()] = true;
             try {
                 mutex.acquire();
                 try {
@@ -270,7 +271,6 @@ public class SqliteDB {
             } catch (InterruptedException | IOException | TimeoutException e) {
                 System.out.println("Blocked access");
             } finally {
-                semaphore[stock.getId()] = true;
                 mutex.release();
             }
         }
