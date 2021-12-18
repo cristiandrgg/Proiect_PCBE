@@ -125,42 +125,35 @@ public class SqliteDB {
         return stockList;
     }
 
-    public void updateBid(Bid bid, boolean modify) throws SQLException {
-        int random = (int) (Math.random() * 4);
-        float changedPrice;
-        if (!modify) {
-            changedPrice = bid.getPrice() - random;
-        } else {
-            changedPrice = bid.getPrice() + random;
-        }
-
+    public void updateBid(Bid bid) throws SQLException {
+        int random = getRandomInt(1,2);
+        float changedPrice = bid.getPrice() + random;
         Statement stockStatement = connection.createStatement();
         int rowsCount = stockStatement.executeUpdate(String.format("UPDATE BIDS SET pret=%s WHERE id=%s", changedPrice, bid.getId()));
-
+        bid.setPrice(changedPrice);
         if (rowsCount == 1) {
-            System.out.printf("Bid price has changed to %s", changedPrice);
+            System.out.printf("Bid %d price has changed to %s\n", bid.getId(), changedPrice);
         } else {
             System.out.println("Bid price hasn't changed");
         }
     }
 
-    public void updateStock(Stock stock, boolean modify) throws SQLException {
-        int random = (int) (Math.random() * 4);
-        float changedPrice;
-        if (!modify) {
-            changedPrice = stock.getPrice() + random;
-        } else {
-            changedPrice = stock.getPrice() - random;
-        }
-
-
+    public void updateStock(Stock stock) throws SQLException {
+        int random = getRandomInt(1,3);
+        float changedPrice = stock.getPrice() - random;
         Statement stockStatement = connection.createStatement();
         int rowsCount = stockStatement.executeUpdate(String.format("UPDATE SELLS SET pret=%s WHERE id_stock=%s", changedPrice, stock.getId()));
-
+        stock.setPrice(changedPrice);
         if (rowsCount == 1) {
-            System.out.printf("Stock price has changed to %s", changedPrice);
+            System.out.printf("Stock %d price has changed to %s\n", stock.getId(), changedPrice);
         } else {
             System.out.println("Stock price hasn't changed");
         }
+    }
+
+    private int getRandomInt(int min, int max) {
+        min = (int) Math.ceil(min);
+        max = (int) Math.floor(max);
+        return (int) Math.floor(Math.random() * (max - min) + min);
     }
 }
