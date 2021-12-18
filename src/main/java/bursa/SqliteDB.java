@@ -24,17 +24,17 @@ public class SqliteDB {
     private static int count = 0;
 
     public SqliteDB() {
-
-    }
-
-
-    public List<Buyer> getBuyers() {
         try {
             Class.forName("org.sqlite.JDBC");
             connection = (java.sql.Connection) DriverManager.getConnection("jdbc:sqlite:bursa.db");
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
+    }
+
+
+    public List<Buyer> getBuyers() {
+
 
         List<Buyer> list = new ArrayList<>();
 
@@ -60,7 +60,6 @@ public class SqliteDB {
             }
             statement.close();
             resultSet.close();
-            connection.close();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
@@ -69,12 +68,6 @@ public class SqliteDB {
     }
 
     public List<Seller> getSellers() {
-        try {
-            Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection("jdbc:sqlite:bursa.db");
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
 
         List<Seller> list = new ArrayList<>();
 
@@ -100,7 +93,6 @@ public class SqliteDB {
             }
             statement.close();
             resultSet.close();
-            connection.close();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
@@ -109,13 +101,6 @@ public class SqliteDB {
     }
 
     public List<Bid> getBids() throws SQLException {
-        try {
-            Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection("jdbc:sqlite:bursa.db");
-
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
 
         Statement bidStatement = connection.createStatement();
         ResultSet bidResultSet = bidStatement.executeQuery("SELECT * FROM BIDS");
@@ -134,19 +119,11 @@ public class SqliteDB {
         }
         bidResultSet.close();
         bidStatement.close();
-        connection.close();
         return bidList;
     }
 
     public List<Stock> getStocks() throws SQLException {
         // stocks
-        try {
-            Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection("jdbc:sqlite:bursa.db");
-
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
 
         Statement stockStatement = connection.createStatement();
         ResultSet stockResultSet = stockStatement.executeQuery("SELECT STOCKS.id, STOCKS.nume, SELLS.nr_actiuni, SELLS.pret, SELLS.id_seller FROM STOCKS, SELLS WHERE STOCKS.id = SELLS.id;");
@@ -165,18 +142,10 @@ public class SqliteDB {
         }
         stockResultSet.close();
         stockStatement.close();
-        connection.close();
         return stockList;
     }
 
     public void updateBid(Bid bid) throws SQLException {
-        try {
-            Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection("jdbc:sqlite:bursa.db");
-
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
 
         int random = getRandomInt(1, 2);
         float changedPrice = bid.getPrice() + random;
@@ -189,17 +158,9 @@ public class SqliteDB {
             System.out.println("Bid price hasn't changed");
         }
         bidStatement.close();
-        connection.close();
     }
 
     public void updateStock(Stock stock) throws SQLException {
-        try {
-            Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection("jdbc:sqlite:bursa.db");
-
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
 
         int random = getRandomInt(1, 3);
         float changedPrice = stock.getPrice() - random;
@@ -212,7 +173,6 @@ public class SqliteDB {
             System.out.println("Stock price hasn't changed");
         }
         stockStatement.close();
-        connection.close();
     }
 
     private int getRandomInt(int min, int max) {
@@ -304,9 +264,8 @@ public class SqliteDB {
                 }
             }
 
+            statement.close();
             sendHistoryNotification(message);
-
-            connection.close();
         } catch (InterruptedException | IOException | TimeoutException e) {
             System.out.println("Blocked access");
         } finally {
