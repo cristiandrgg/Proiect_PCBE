@@ -5,6 +5,7 @@ import models.Buyer;
 import models.Seller;
 import models.Stock;
 import processes.BuyerProcess;
+import processes.HistoryProcess;
 import processes.SellerProcess;
 
 import java.sql.SQLException;
@@ -66,6 +67,8 @@ public class Server {
                     childThreads.add(t);
                     t.start();
                 }
+                Thread t = new Thread(new HistoryProcess());
+                t.start();
                 for (Thread thread : childThreads) {
                     thread.join();
                 }

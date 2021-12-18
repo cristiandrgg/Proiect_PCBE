@@ -1,18 +1,23 @@
 package bursa;
 
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.Connection;
 import models.Bid;
 import models.Buyer;
 import models.Seller;
 import models.Stock;
 
+import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeoutException;
 
 public class SqliteDB {
 
-    Connection connection = null;
+    java.sql.Connection connection = null;
     private static int count = 0;
 
     public SqliteDB() {
@@ -23,7 +28,7 @@ public class SqliteDB {
     public List<Buyer> getBuyers() {
         try {
             Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection("jdbc:sqlite:bursa.db");
+            connection = (java.sql.Connection) DriverManager.getConnection("jdbc:sqlite:bursa.db");
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
@@ -263,18 +268,31 @@ public class SqliteDB {
                 System.out.println("History failed");
             }
 
+            sendHistoryNotification();
+
             int rowsCountUpdate = statement.executeUpdate(String.format("UPDATE SELLS SET nr_actiuni=%s WHERE id_stock=%s", numberOfStocks, stock.getId()));
             if (rowsCountUpdate == 1) {
                 System.out.println("Updated successfully");
             } else {
                 System.out.println("Update failed");
             }
-
             connection.close();
-        }catch (InterruptedException e){
+        }catch (InterruptedException | IOException | TimeoutException e){
             System.out.println("Blocked access");
         }finally{
             mutex.release();
+        }
+    }
+
+    private void sendHistoryNotification() throws IOException, TimeoutException {
+        ConnectionFactory factory = new ConnectionFactory();
+
+        try(Connection rabbitmqConnection = factory.newConnection()){
+            Channel channel = rabbitmqConnection.createChannel();
+            channel.queueDeclare("hello", false, false, false, null);
+
+            String message = "this is a message";
+            channel.basicPublish("", "hello", false, null, message.getBytes());
         }
     }
 }
