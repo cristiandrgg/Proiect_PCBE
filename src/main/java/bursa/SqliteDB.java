@@ -3,10 +3,7 @@ package bursa;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
-import models.Bid;
-import models.Buyer;
-import models.Seller;
-import models.Stock;
+import models.*;
 
 import java.io.IOException;
 import java.sql.DriverManager;
@@ -33,69 +30,64 @@ public class SqliteDB {
     }
 
 
-    public List<Buyer> getBuyers() {
+    public List<Buyer> getBuyers() throws SQLException {
 
 
         List<Buyer> list = new ArrayList<>();
 
-        try {
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM BUYERS");
+        Statement statement = connection.createStatement();
+        ResultSet resultSet = statement.executeQuery("SELECT * FROM BUYERS");
 
-            while (resultSet.next()) {
-                Integer id = resultSet.getInt("id");
-                String name = resultSet.getString("nume");
-                Buyer buyer = new Buyer(id, name);
+        while (resultSet.next()) {
+            Integer id = resultSet.getInt("id");
+            String name = resultSet.getString("nume");
+            Buyer buyer = new Buyer(id, name);
 
-                // bids
-                List<Bid> bidList = getBids();
-                List<Bid> buyerBidsList = new ArrayList<>();
-                for (Bid bid : bidList) {
-                    if (bid.getBuyerId().equals(buyer.getId())) {
-                        buyerBidsList.add(bid);
-                    }
+            // bids
+            List<Bid> bidList = getBids();
+            List<Bid> buyerBidsList = new ArrayList<>();
+            for (Bid bid : bidList) {
+                if (bid.getBuyerId().equals(buyer.getId())) {
+                    buyerBidsList.add(bid);
                 }
-                buyer.setBidList(buyerBidsList);
-                list.add(buyer);
             }
-            statement.close();
-            resultSet.close();
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
+            buyer.setBidList(buyerBidsList);
+            list.add(buyer);
         }
+        statement.close();
+        resultSet.close();
+
 
         return list;
     }
 
-    public List<Seller> getSellers() {
+    public List<Seller> getSellers() throws SQLException {
 
         List<Seller> list = new ArrayList<>();
 
-        try {
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM SELLERS");
 
-            while (resultSet.next()) {
-                Integer id = resultSet.getInt("id");
-                String name = resultSet.getString("nume");
-                Seller seller = new Seller(id, name);
+        Statement statement = connection.createStatement();
+        ResultSet resultSet = statement.executeQuery("SELECT * FROM SELLERS");
 
-                // stocks
-                List<Stock> stockList = getStocks();
-                List<Stock> sellerStocksList = new ArrayList<>();
-                for (Stock stock : stockList) {
-                    if (stock.getSellerId().equals(seller.getId())) {
-                        sellerStocksList.add(stock);
-                    }
+        while (resultSet.next()) {
+            Integer id = resultSet.getInt("id");
+            String name = resultSet.getString("nume");
+            Seller seller = new Seller(id, name);
+
+            // stocks
+            List<Stock> stockList = getStocks();
+            List<Stock> sellerStocksList = new ArrayList<>();
+            for (Stock stock : stockList) {
+                if (stock.getSellerId().equals(seller.getId())) {
+                    sellerStocksList.add(stock);
                 }
-                seller.setStockList(sellerStocksList);
-                list.add(seller);
             }
-            statement.close();
-            resultSet.close();
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
+            seller.setStockList(sellerStocksList);
+            list.add(seller);
         }
+        statement.close();
+        resultSet.close();
+
 
         return list;
     }
@@ -225,7 +217,7 @@ public class SqliteDB {
                 Integer bidId = bid.getId();
                 Integer stockId = stock.getId();
 
-                int rowsCountInsert = statement.executeUpdate(String.format("INSERT INTO HISTORY VALUES (%s, %s, %s)", counter, stockId, bidId));
+                int rowsCountInsert = statement.executeUpdate(String.format("INSERT INTO HISTORY VALUES (%s, %s, %s, %s, %s)", counter, stockId, bidId, numberOfStocks, stock.getPrice()));
 
                 String message = null;
 
@@ -285,5 +277,27 @@ public class SqliteDB {
 
             channel.basicPublish("", "hello", false, null, message.getBytes());
         }
+    }
+
+    public List<History> showHistory() throws SQLException {
+        List<History> histories = new ArrayList<>();
+
+        Statement statement = connection.createStatement();
+        ResultSet resultSet = statement.executeQuery("SELECT * FROM HISTORY");
+
+        while (resultSet.next()) {
+            Integer tranzId = resultSet.getInt("id_tranz");
+            Integer stockId = resultSet.getInt("id_stock");
+            Integer bidId = resultSet.getInt("id_bid");
+            Integer number = resultSet.getInt("nr_actiuni");
+            float price = resultSet.getFloat("pret");
+
+            histories.add(new History(tranzId, stockId, bidId, number, price));
+
+        }
+
+        statement.close();
+        resultSet.close();
+        return histories;
     }
 }
