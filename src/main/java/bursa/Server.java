@@ -12,8 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-import static java.lang.Thread.sleep;
-
 /**
  * Created by: Doru
  * Date: 09/11/2021
@@ -30,7 +28,7 @@ public class Server {
         List<Stock> stocks;
         List<Bid> bids;
 
-        while(true) {
+        while (true) {
             System.out.println("\nLoad DataBase - 1\n" +
                     "Start Simulation - 2\n" +
                     "Exit Application - Anything Else\n" +
@@ -49,32 +47,30 @@ public class Server {
                 bids = sqliteDB.getBids();
                 System.out.println("DataBase loaded!");
                 print(sellers, buyers, bids, stocks);
-            }
-            else if (option.equals("2")) {
+            } else if (option.equals("2")) {
                 ArrayList<Thread> childThreads = new ArrayList<>();
                 System.out.println("Starting simulation");
-                if(sellers == null || buyers == null){
+                if (sellers == null || buyers == null) {
                     System.out.println("WARNING: Simulation failed -> sellers or buyers are not loaded. Please load DataBase!");
                     continue;
                 }
-                for(Seller seller : sellers){
+                for (Seller seller : sellers) {
                     SellerProcess sellerProcess = new SellerProcess(seller);
                     Thread t = new Thread(sellerProcess);
                     childThreads.add(t);
                     t.start();
                 }
-                for(Buyer buyer : buyers) {
+                for (Buyer buyer : buyers) {
                     BuyerProcess buyerProcess = new BuyerProcess(buyer);
                     Thread t = new Thread(buyerProcess);
                     childThreads.add(t);
                     t.start();
                 }
-                for(Thread thread : childThreads){
+                for (Thread thread : childThreads) {
                     thread.join();
                 }
                 System.out.println("Simulation ended");
-            }
-            else{
+            } else {
                 System.out.println("Thank you for using Timisoara Stock Exchange and have a nice day!");
                 break;
             }

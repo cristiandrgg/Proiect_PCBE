@@ -12,9 +12,14 @@ import java.util.List;
 public class SqliteDB {
 
     Connection connection = null;
-    Statement statement = null;
+    private static int count = 0;
 
     public SqliteDB() {
+
+    }
+
+
+    public List<Buyer> getBuyers() {
         try {
             Class.forName("org.sqlite.JDBC");
             connection = DriverManager.getConnection("jdbc:sqlite:bursa.db");
@@ -22,14 +27,11 @@ public class SqliteDB {
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
-    }
 
-
-    public List<Buyer> getBuyers() {
         List<Buyer> list = new ArrayList<>();
 
         try {
-            this.statement = connection.createStatement();
+            Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT * FROM BUYERS");
 
             while (resultSet.next()) {
@@ -48,6 +50,9 @@ public class SqliteDB {
                 buyer.setBidList(buyerBidsList);
                 list.add(buyer);
             }
+            statement.close();
+            resultSet.close();
+            connection.close();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
@@ -56,10 +61,18 @@ public class SqliteDB {
     }
 
     public List<Seller> getSellers() {
+        try {
+            Class.forName("org.sqlite.JDBC");
+            connection = DriverManager.getConnection("jdbc:sqlite:bursa.db");
+            System.out.println("Connected to the db");
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
         List<Seller> list = new ArrayList<>();
 
         try {
-            this.statement = connection.createStatement();
+            Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT * FROM SELLERS");
 
             while (resultSet.next()) {
@@ -78,6 +91,9 @@ public class SqliteDB {
                 seller.setStockList(sellerStocksList);
                 list.add(seller);
             }
+            statement.close();
+            resultSet.close();
+            connection.close();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
@@ -86,6 +102,14 @@ public class SqliteDB {
     }
 
     public List<Bid> getBids() throws SQLException {
+        try {
+            Class.forName("org.sqlite.JDBC");
+            connection = DriverManager.getConnection("jdbc:sqlite:bursa.db");
+            System.out.println("Connected to the db");
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
         Statement bidStatement = connection.createStatement();
         ResultSet bidResultSet = bidStatement.executeQuery("SELECT * FROM BIDS");
 
@@ -101,12 +125,22 @@ public class SqliteDB {
             Bid bid = new Bid(bidId, buyerId, stockId, price, stockNumber);
             bidList.add(bid);
         }
-
+        bidResultSet.close();
+        bidStatement.close();
+        connection.close();
         return bidList;
     }
 
     public List<Stock> getStocks() throws SQLException {
         // stocks
+        try {
+            Class.forName("org.sqlite.JDBC");
+            connection = DriverManager.getConnection("jdbc:sqlite:bursa.db");
+            System.out.println("Connected to the db");
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
         Statement stockStatement = connection.createStatement();
         ResultSet stockResultSet = stockStatement.executeQuery("SELECT STOCKS.id, STOCKS.nume, SELLS.nr_actiuni, SELLS.pret, SELLS.id_seller FROM STOCKS, SELLS WHERE STOCKS.id = SELLS.id;");
 
@@ -122,24 +156,45 @@ public class SqliteDB {
             Stock stock = new Stock(stockId, stockName, stockNumber, price, sellerId);
             stockList.add(stock);
         }
+        stockResultSet.close();
+        stockStatement.close();
+        connection.close();
         return stockList;
     }
 
     public void updateBid(Bid bid) throws SQLException {
-        int random = getRandomInt(1,2);
+        try {
+            Class.forName("org.sqlite.JDBC");
+            connection = DriverManager.getConnection("jdbc:sqlite:bursa.db");
+            System.out.println("Connected to the db");
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
+        int random = getRandomInt(1, 2);
         float changedPrice = bid.getPrice() + random;
-        Statement stockStatement = connection.createStatement();
-        int rowsCount = stockStatement.executeUpdate(String.format("UPDATE BIDS SET pret=%s WHERE id=%s", changedPrice, bid.getId()));
+        Statement bidStatement = connection.createStatement();
+        int rowsCount = bidStatement.executeUpdate(String.format("UPDATE BIDS SET pret=%s WHERE id=%s", changedPrice, bid.getId()));
         bid.setPrice(changedPrice);
         if (rowsCount == 1) {
             System.out.printf("Bid %d price has changed to %s\n", bid.getId(), changedPrice);
         } else {
             System.out.println("Bid price hasn't changed");
         }
+        bidStatement.close();
+        connection.close();
     }
 
     public void updateStock(Stock stock) throws SQLException {
-        int random = getRandomInt(1,3);
+        try {
+            Class.forName("org.sqlite.JDBC");
+            connection = DriverManager.getConnection("jdbc:sqlite:bursa.db");
+            System.out.println("Connected to the db");
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
+        int random = getRandomInt(1, 3);
         float changedPrice = stock.getPrice() - random;
         Statement stockStatement = connection.createStatement();
         int rowsCount = stockStatement.executeUpdate(String.format("UPDATE SELLS SET pret=%s WHERE id_stock=%s", changedPrice, stock.getId()));
@@ -149,11 +204,70 @@ public class SqliteDB {
         } else {
             System.out.println("Stock price hasn't changed");
         }
+        stockStatement.close();
+        connection.close();
     }
 
     private int getRandomInt(int min, int max) {
         min = (int) Math.ceil(min);
         max = (int) Math.floor(max);
         return (int) Math.floor(Math.random() * (max - min) + min);
+    }
+
+    public void exchange(Stock stock, Bid bid) throws SQLException, InterruptedException {
+        try {
+            Class.forName("org.sqlite.JDBC");
+            connection = DriverManager.getConnection("jdbc:sqlite:bursa.db");
+            System.out.println("Connected to the db");
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
+        Statement counterStatement = connection.createStatement();
+        ResultSet resultSet = counterStatement.executeQuery("SELECT MAX(id_tranz) FROM HISTORY");
+
+        Integer numberOfStocks = null;
+        Integer counter = null;
+
+        while (resultSet.next()) {
+            counter = resultSet.getInt("MAX(id_tranz)");
+        }
+
+        if (counter == null) {
+            counter = 1;
+        } else {
+            counter++;
+        }
+
+        if (stock.getPrice() != bid.getPrice()) {
+            bid.setPrice(stock.getPrice());
+        }
+
+        if (bid.getNumberOfStocks() > stock.getNumberOfStocks()) {
+            numberOfStocks = stock.getNumberOfStocks();
+        } else {
+            numberOfStocks = stock.getNumberOfStocks() - bid.getNumberOfStocks();
+        }
+
+        Statement statement = connection.createStatement();
+        Integer bidId = bid.getId();
+        Integer stockId = stock.getId();
+
+        int rowsCountInsert = statement.executeUpdate(String.format("INSERT INTO HISTORY VALUES (%s, %s, %s)", counter, stockId, bidId));
+
+        if (rowsCountInsert == 1) {
+            System.out.println("Insert in history");
+        } else {
+            System.out.println("History failed");
+        }
+
+        int rowsCountUpdate = statement.executeUpdate(String.format("UPDATE SELLS SET nr_actiuni=%s WHERE id_stock=%s", numberOfStocks, stock.getId()));
+        if (rowsCountUpdate == 1) {
+            System.out.println("Updated successfully");
+        } else {
+            System.out.println("Update failed");
+        }
+
+        connection.close();
     }
 }

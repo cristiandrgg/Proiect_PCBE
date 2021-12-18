@@ -17,10 +17,10 @@ public class BuyerProcess extends Thread {
         this.buyer = buyer;
     }
 
-    public void run(){
-        long t= System.currentTimeMillis();
-        long end = t+5000;
-        while(System.currentTimeMillis() < end){
+    public void run() {
+        long t = System.currentTimeMillis();
+        long end = t + 5000;
+        while (System.currentTimeMillis() < end) {
             try {
                 List<Stock> stocks = sqliteDB.getStocks();
                 for (Bid bid : buyer.getBidList()) {
@@ -28,14 +28,14 @@ public class BuyerProcess extends Thread {
                     for (Stock stock : stocks) {
                         if (bid.getStockId().equals(stock.getId())) {
                             if (stock.getPrice() - bid.getPrice() <= 2) {
-                                //TODO
+                                //sqliteDB.exchange(stock, bid);
                             } else {
                                 sqliteDB.updateBid(bid);
                             }
                         }
                     }
                 }
-            }catch (SQLException e) {
+            } catch (SQLException e) {
                 e.printStackTrace();
             }
             try {
