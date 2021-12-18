@@ -12,8 +12,6 @@ public class BuyerProcess extends Thread {
 
     private Buyer buyer;
     SqliteDB sqliteDB = new SqliteDB();
-    boolean semaphore = false;
-    boolean modify = false;
 
     public BuyerProcess(Buyer buyer) {
         this.buyer = buyer;
@@ -29,14 +27,10 @@ public class BuyerProcess extends Thread {
                     System.out.printf("Buyer with id %s placed bid with id %s%n", buyer.getId(), bid.getId());
                     for (Stock stock : stocks) {
                         if (bid.getStockId().equals(stock.getId())) {
-                            if (bid.getPrice() == stock.getPrice()) {
-                                // TODO
+                            if (stock.getPrice() - bid.getPrice() <= 2) {
+                                //TODO
                             } else {
-                                modify = false;
-                                if (bid.getPrice() < stock.getPrice()) {
-                                    modify = true;
-                                }
-                                sqliteDB.updateBid(bid, modify);
+                                sqliteDB.updateBid(bid);
                             }
                         }
                     }
