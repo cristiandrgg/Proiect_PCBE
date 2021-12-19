@@ -22,6 +22,7 @@ public class Server {
         List<Stock> stocks;
         List<Bid> bids;
         SqliteDB sqliteDB = new SqliteDB();
+        boolean isHistoryProcessRunning = false;
 
         while (true) {
             System.out.println("\nLoad DataBase - 1\n" +
@@ -62,8 +63,11 @@ public class Server {
                     childThreads.add(t);
                     t.start();
                 }
-                Thread t = new Thread(new HistoryProcess());
-                t.start();
+                if(!isHistoryProcessRunning) {
+                    Thread t = new Thread(new HistoryProcess());
+                    t.start();
+                    isHistoryProcessRunning = true;
+                }
                 for (Thread thread : childThreads) {
                     thread.join();
                 }
@@ -77,7 +81,7 @@ public class Server {
                     }
                 } else {
                     System.out.println("Thank you for using Timisoara Stock Exchange and have a nice day!");
-                    break;
+                    System.exit(0);
             }
         }
     }

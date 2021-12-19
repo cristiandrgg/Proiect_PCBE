@@ -260,6 +260,8 @@ public class SqliteDB {
                 }
 
                 statement.close();
+                resultSet.close();
+                counterStatement.close();
             } catch (InterruptedException | IOException | TimeoutException e) {
                 System.out.println("Blocked access");
             } finally {
@@ -270,12 +272,19 @@ public class SqliteDB {
 
     private void sendHistoryNotification(String message) throws IOException, TimeoutException {
         ConnectionFactory factory = new ConnectionFactory();
-
-        try (Connection rabbitmqConnection = factory.newConnection()) {
-            Channel channel = rabbitmqConnection.createChannel();
+        Connection rabbitmqConnection = null;
+        Channel channel = null;
+        try {
+            rabbitmqConnection = factory.newConnection();
+            channel = rabbitmqConnection.createChannel();
             channel.queueDeclare("hello", false, false, false, null);
 
             channel.basicPublish("", "hello", false, null, message.getBytes());
+        }catch (IOException e){
+            System.out.println("Message not sent");
+        }finally {
+            channel.close();
+            rabbitmqConnection.close();
         }
     }
 
