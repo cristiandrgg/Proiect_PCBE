@@ -229,7 +229,7 @@ public class SqliteDB {
 
                 sendHistoryNotification(message);
 
-                int rowsCountUpdate = statement.executeUpdate(String.format("UPDATE SELLS SET nr_actiuni=%s WHERE id_stock=%s", numberOfStocks, stock.getId()));
+                int rowsCountUpdate = statement.executeUpdate(String.format("UPDATE SELLS SET nr_actiuni=%s WHERE id_stock=%s", numberOfStocks, stockId));
                 if (rowsCountUpdate == 1) {
                     message = String.format("Stock offer with id %s was modified", stock.getId());
                 } else {
@@ -280,9 +280,9 @@ public class SqliteDB {
             channel.queueDeclare("hello", false, false, false, null);
 
             channel.basicPublish("", "hello", false, null, message.getBytes());
-        }catch (IOException e){
+        } catch (IOException e) {
             System.out.println("Message not sent");
-        }finally {
+        } finally {
             channel.close();
             rabbitmqConnection.close();
         }

@@ -63,7 +63,7 @@ public class Server {
                     childThreads.add(t);
                     t.start();
                 }
-                if(!isHistoryProcessRunning) {
+                if (!isHistoryProcessRunning) {
                     Thread t = new Thread(new HistoryProcess());
                     t.start();
                     isHistoryProcessRunning = true;
@@ -72,16 +72,16 @@ public class Server {
                     thread.join();
                 }
                 System.out.println("Simulation ended");
-                }  else if(option.equals("3")) {
-                    List<History> histories = sqliteDB.showHistory();
-                    System.out.println("History: \n");
-                    for (int i = 0; i < histories.size(); i++) {
-                        System.out.println(histories.get(i).getTranzId() + " " + histories.get(i).getStockSellId() + " " + histories.get(i).getBidId() +
-                                " " + histories.get(i).getNumberOfActions() + " " + histories.get(i).getPrice());
-                    }
-                } else {
-                    System.out.println("Thank you for using Timisoara Stock Exchange and have a nice day!");
-                    System.exit(0);
+            } else if (option.equals("3")) {
+                List<History> histories = sqliteDB.showHistory();
+                System.out.println("History: \n");
+                for (int i = 0; i < histories.size(); i++) {
+                    System.out.println(histories.get(i).getTranzId() + " " + histories.get(i).getStockSellId() + " " + histories.get(i).getBidId() +
+                            " " + histories.get(i).getNumberOfActions() + " " + histories.get(i).getPrice());
+                }
+            } else {
+                System.out.println("Thank you for using Timisoara Stock Exchange and have a nice day!");
+                System.exit(0);
             }
         }
     }
